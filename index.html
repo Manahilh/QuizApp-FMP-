@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Quiz Login</title>
+    <!-- Link to external stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Login Header -->
+        <h2>Quiz Login</h2>
+
+        <!-- Login Options Container -->
+        <div id="login-options">
+            <!-- Google Login Button -->
+            <button class="google-btn" onclick="loginWithGoogle()">Login with Google</button>
+            <!-- Phone Login Toggle Button -->
+            <button id="btn" onclick="showPhoneBox()">Login with Phone</button>
+        </div>
+
+        <!-- Phone Authentication Section (Hidden by default) -->
+        <div id="phoneBox" style="display:none; margin-top:20px;">
+            <!-- Phone Input Field -->
+            <input id="phone" type="tel" placeholder="+923001234567"
+                style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px;">
+
+            <!-- Recaptcha Container for Firebase Phone Auth -->
+            <div id="recaptcha-container"></div>
+
+            <!-- Send OTP Button -->
+            <button id="btn" onclick="sendOTP()">Send OTP</button>
+
+            <!-- OTP Input Field -->
+            <input id="otp" type="text" placeholder="Enter OTP"
+                style="width:100%; padding:10px; margin-top:10px; border-radius:8px;">
+
+            <!-- Verify OTP Button -->
+            <button id="btn" onclick="verifyOTP()">Verify & Login</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <!-- Firebase Config and App Logic -->
+    <script src="firebase.config.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

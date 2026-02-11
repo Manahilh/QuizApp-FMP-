@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Quiz App</title>
+    <!-- Link to external stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Main container for the quiz interface -->
+    <div class="container" id="quiz-container">
+        <!-- Timer display -->
+        <h2 id="timer">04:00</h2>
+        <!-- User welcome message -->
+        <p id="user" style="color:#38bdf8; font-size:0.9rem;"></p>
+        <!-- Question Text -->
+        <h3 id="ques"></h3>
+        
+        <!-- Options Container -->
+        <div id="options-div">
+            <!-- Option 1 -->
+            <input type="radio" class="options" name="quiz" id="o1" value="1" onclick="enableNext()">
+            <label for="o1" id="opt1"></label>
+            <!-- Option 2 -->
+            <input type="radio" class="options" name="quiz" id="o2" value="2" onclick="enableNext()">
+            <label for="o2" id="opt2"></label>
+            <!-- Option 3 -->
+            <input type="radio" class="options" name="quiz" id="o3" value="3" onclick="enableNext()">
+            <label for="o3" id="opt3"></label>
+        </div>
+        
+        <!-- Next Button (Initially Disabled) -->
+        <button id="btn" disabled onclick="nextQuestion()">Next</button>
+        <!-- Logout Button -->
+        <button onclick="logout()"
+            style="background:none; color:#64748b; text-decoration:underline; border:none; width:auto;">Logout</button>
+    </div>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
+    <!-- Firebase Config and App Logic -->
+    <script src="firebase.config.js"></script>
+    <script src="app.js"></script>
+
+</body>
+
+</html>
