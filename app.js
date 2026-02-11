@@ -2,7 +2,6 @@ window.addEventListener("load", () => {
     // 🔐 1. AUTHENTICATION & PAGE PROTECTION
     auth.onAuthStateChanged(user => {
         const path = window.location.pathname;
-        
         const isOnLoginPage = path.includes("index.html") || path.endsWith("/");
         const isOnQuizPage = path.includes("quiz.html");
 
@@ -10,19 +9,14 @@ window.addEventListener("load", () => {
             if (isOnLoginPage) {
                 window.location.href = "quiz.html";
             }
-
-            // User info display logic
             const userDisp = document.getElementById("user");
             if (userDisp) {
                 userDisp.innerText = "Welcome " + (user.email || user.phoneNumber || "User");
             }
-
-            // Quiz start logic
             if (document.getElementById("ques")) {
                 loadQuestion();
                 startTimer();
             }
-
         } else {
             if (isOnQuizPage) {
                 window.location.href = "index.html";
@@ -50,37 +44,25 @@ window.addEventListener("load", () => {
     let score = 0;       
     let timeLeft = 240;  
 
-    // 🖥️ 4. DISPLAY QUESTION
     function loadQuestion() {
         const payload = questions[index];
         if (!payload) return;
-
         document.getElementById("ques").innerText = payload.q;
         document.getElementById("opt1").innerText = payload.o1;
         document.getElementById("opt2").innerText = payload.o2;
         document.getElementById("opt3").innerText = payload.o3;
-
         document.getElementById("btn").disabled = true;
-
         const radioButtons = document.getElementsByClassName("options");
-        for (let radio of radioButtons) {
-            radio.checked = false;
-        }
+        for (let radio of radioButtons) { radio.checked = false; }
     }
 
-    // ⏱️ 5. TIMER
     function startTimer() {
-        if (window.timerInterval) clearInterval(window.timerInterval);
         window.timerInterval = setInterval(() => {
             let mins = Math.floor(timeLeft / 60);
             let secs = timeLeft % 60;
             if (secs < 10) secs = "0" + secs;
-
-            const timerDisp = document.getElementById("timer");
-            if (timerDisp) timerDisp.innerText = mins + ":" + secs;
-
+            document.getElementById("timer").innerText = mins + ":" + secs;
             timeLeft--;
-
             if (timeLeft < 0) {
                 clearInterval(window.timerInterval);
                 alert("Time's Up!");
@@ -89,18 +71,14 @@ window.addEventListener("load", () => {
         }, 1000);
     }
 
-    window.enableNext = () => {
-        document.getElementById("btn").disabled = false;
-    };
+    window.enableNext = () => { document.getElementById("btn").disabled = false; };
 
+    // ➡️ 3. NEXT QUESTION & SAVE SCORE LOGIC
     window.nextQuestion = () => {
         const selectedOption = document.querySelector('input[name="quiz"]:checked');
         if (!selectedOption) return;
 
-        const selectedValue = selectedOption.value;
-        const selectedLabelId = "opt" + selectedValue;
-        const selectedText = document.getElementById(selectedLabelId).innerText;
-
+        const selectedText = document.getElementById("opt" + selectedOption.value).innerText;
         if (selectedText === questions[index].ans) {
             score++;
         }
@@ -110,13 +88,36 @@ window.addEventListener("load", () => {
         if (index < questions.length) {
             loadQuestion();
         } else {
+            // Quiz khatam hone par data save karna
             clearInterval(window.timerInterval);
-            alert("Quiz Finished! Your Score: " + score + " / " + questions.length);
-            window.location.href = "quiz.html"; // Finish ke baad quiz reset karne ke liye
+            const user = auth.currentUser;
+            
+            if (user) {
+                // 'scores' naam ki collection mein data add ho raha hai
+                db.collection("scores").add({
+                    userId: user.uid,
+                    name: user.displayName || "User",
+                    email: user.email || user.phoneNumber,
+                    score: score,
+                    totalQuestions: questions.length,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    alert("Quiz Finished! Your score " + score + " has been saved.");
+                    window.location.href = "index.html"; 
+                })
+                .catch((error) => {
+                    console.error("Error saving score: ", error);
+                    alert("Score not saved, but your score was: " + score);
+                });
+            } else {
+                alert("Quiz Finished! Score: " + score);
+                window.location.href = "index.html";
+            }
         }
     };
 
-    // 🔑 8. LOGIN & LOGOUT
+    // 🔑 LOGIN FUNCTIONS
     window.loginWithGoogle = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider).catch(error => alert(error.message));
@@ -141,14 +142,10 @@ window.addEventListener("load", () => {
 
     window.verifyOTP = () => {
         const otpCode = document.getElementById("otp").value;
-        window.confirmationResult.confirm(otpCode)
-            .catch(() => alert("Invalid OTP"));
+        window.confirmationResult.confirm(otpCode).catch(() => alert("Invalid OTP"));
     };
 
     window.logout = () => {
-        auth.signOut().then(() => {
-            window.location.href = "index.html";
-        });
+        auth.signOut().then(() => { window.location.href = "index.html"; });
     };
-});            
-
+});
