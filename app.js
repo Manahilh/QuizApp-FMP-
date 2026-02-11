@@ -3,10 +3,12 @@ window.addEventListener("load", () => {
     auth.onAuthStateChanged(user => {
         const path = window.location.pathname;
         
+        // Login file 'index.html' hai aur quiz file 'quiz.html'
         const isOnLoginPage = path.includes("index.html") || path.endsWith("/") || path.includes("login.html");
         const isOnQuizPage = path.includes("quiz.html");
 
         if (user) {
+            // Agar user login hai aur login page par hai, toh quiz par bhejo
             if (isOnLoginPage) {
                 window.location.href = "quiz.html";
             }
@@ -24,6 +26,7 @@ window.addEventListener("load", () => {
             }
 
         } else {
+            // Agar user login nahi hai aur quiz page par hai, toh login par bhejo
             if (isOnQuizPage) {
                 window.location.href = "index.html";
             }
@@ -115,6 +118,7 @@ window.addEventListener("load", () => {
             const user = auth.currentUser;
 
             if (user) {
+                // Score database mein save karna
                 db.collection("scores").add({
                     email: user.email || user.phoneNumber,
                     score: score,
