@@ -6,21 +6,12 @@ window.addEventListener("load", () => {
         const isOnQuizPage = path.includes("quiz.html");
 
         if (user) {
-            if (isOnLoginPage) {
-                window.location.href = "quiz.html";
-            }
+            if (isOnLoginPage) window.location.href = "quiz.html";
             const userDisp = document.getElementById("user");
-            if (userDisp) {
-                userDisp.innerText = "Welcome " + (user.email || user.phoneNumber || "User");
-            }
-            if (document.getElementById("ques")) {
-                loadQuestion();
-                startTimer();
-            }
+            if (userDisp) userDisp.innerText = "Welcome " + (user.email || user.phoneNumber || "User");
+            if (document.getElementById("ques")) { loadQuestion(); startTimer(); }
         } else {
-            if (isOnQuizPage) {
-                window.location.href = "index.html";
-            }
+            if (isOnQuizPage) window.location.href = "index.html";
         }
     });
 
@@ -86,24 +77,24 @@ window.addEventListener("load", () => {
             clearInterval(window.timerInterval);
             const user = auth.currentUser;
             if (user) {
-                // Realtime Database save logic
-                database.ref('scores/' + user.uid).set({
+                // Database save path: scores/userID/randomID
+                database.ref('scores/' + user.uid).push({
                     email: user.email || user.phoneNumber,
                     score: score,
                     total: questions.length,
                     timestamp: Date.now()
                 }).then(() => {
-                    alert("Quiz Finished! Score " + score + " saved to Database.");
+                    alert("Quiz Finished! Your score " + score + " is saved.");
                     window.location.href = "index.html";
                 }).catch(e => alert("Error: " + e.message));
             } else {
-                alert("Quiz Finished! Score: " + score);
+                alert("Finished! Score: " + score);
                 window.location.href = "index.html";
             }
         }
     };
 
-    // 🔑 4. LOGIN / LOGOUT
+    // 🔑 4. AUTH FUNCTIONS
     window.loginWithGoogle = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider).catch(error => alert(error.message));
