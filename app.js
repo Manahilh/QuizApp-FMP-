@@ -3,12 +3,10 @@ window.addEventListener("load", () => {
     auth.onAuthStateChanged(user => {
         const path = window.location.pathname;
         
-        // Aapki login file ka naam 'index.html' hai aur quiz file 'quiz.html'
         const isOnLoginPage = path.includes("index.html") || path.endsWith("/");
         const isOnQuizPage = path.includes("quiz.html");
 
         if (user) {
-            // Agar user login hai aur login page par hai, toh usay quiz par bhejo
             if (isOnLoginPage) {
                 window.location.href = "quiz.html";
             }
@@ -26,7 +24,6 @@ window.addEventListener("load", () => {
             }
 
         } else {
-            // Agar user login nahi hai aur quiz page par jane ki koshish kare
             if (isOnQuizPage) {
                 window.location.href = "index.html";
             }
@@ -154,3 +151,4 @@ window.addEventListener("load", () => {
         });
     };
 });            
+
