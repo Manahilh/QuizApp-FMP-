@@ -2,21 +2,29 @@ window.addEventListener("load", () => {
     // 🔐 1. AUTH PROTECTION
     auth.onAuthStateChanged(user => {
         const path = window.location.pathname;
-        // Correcting file paths
         const isOnLoginPage = path.includes("index.html") || path.endsWith("/");
         const isOnQuizPage = path.includes("quiz.html");
 
         if (user) {
-            if (isOnLoginPage) window.location.href = "quiz.html";
+            if (isOnLoginPage) {
+                window.location.href = "quiz.html";
+            }
             const userDisp = document.getElementById("user");
-            if (userDisp) userDisp.innerText = "Welcome " + (user.email || user.phoneNumber || "User");
-            if (document.getElementById("ques")) { loadQuestion(); startTimer(); }
+            if (userDisp) {
+                userDisp.innerText = "Welcome " + (user.email || user.phoneNumber || "User");
+            }
+            if (document.getElementById("ques")) {
+                loadQuestion();
+                startTimer();
+            }
         } else {
-            if (isOnQuizPage) window.location.href = "index.html";
+            if (isOnQuizPage) {
+                window.location.href = "index.html";
+            }
         }
     });
 
-    // 📚 2. QUESTIONS
+    // 📚 2. QUESTIONS DATA
     const questions = [
         { q: "How many elements are in the periodic table?", o1: "118", o2: "115", o3: "120", ans: "118" },
         { q: "Which planet is closest to the sun?", o1: "Venus", o2: "Mercury", o3: "Mars", ans: "Mercury" },
@@ -53,13 +61,17 @@ window.addEventListener("load", () => {
             if (secs < 10) secs = "0" + secs;
             document.getElementById("timer").innerText = mins + ":" + secs;
             timeLeft--;
-            if (timeLeft < 0) { clearInterval(window.timerInterval); alert("Time's Up!"); window.location.reload(); }
+            if (timeLeft < 0) {
+                clearInterval(window.timerInterval);
+                alert("Time's Up!");
+                window.location.reload();
+            }
         }, 1000);
     }
 
     window.enableNext = () => { document.getElementById("btn").disabled = false; };
 
-    // ➡️ 3. NEXT & SAVE TO REALTIME DATABASE
+    // ➡️ 3. NEXT & SAVE SCORE
     window.nextQuestion = () => {
         const selectedOption = document.querySelector('input[name="quiz"]:checked');
         if (!selectedOption) return;
@@ -68,7 +80,6 @@ window.addEventListener("load", () => {
         if (selectedText === questions[index].ans) { score++; }
 
         index++;
-
         if (index < questions.length) {
             loadQuestion();
         } else {
@@ -76,23 +87,23 @@ window.addEventListener("load", () => {
             const user = auth.currentUser;
             if (user) {
                 // Realtime Database save logic
-                database.ref('quiz_scores/' + user.uid).push({
+                database.ref('scores/' + user.uid).set({
                     email: user.email || user.phoneNumber,
                     score: score,
                     total: questions.length,
                     timestamp: Date.now()
                 }).then(() => {
-                    alert("Quiz Finished! Score " + score + " saved.");
+                    alert("Quiz Finished! Score " + score + " saved to Database.");
                     window.location.href = "index.html";
                 }).catch(e => alert("Error: " + e.message));
             } else {
-                alert("Finished! Score: " + score);
+                alert("Quiz Finished! Score: " + score);
                 window.location.href = "index.html";
             }
         }
     };
 
-    // 🔑 4. AUTH FUNCTIONS
+    // 🔑 4. LOGIN / LOGOUT
     window.loginWithGoogle = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider).catch(error => alert(error.message));
@@ -101,12 +112,16 @@ window.addEventListener("load", () => {
     window.showPhoneBox = () => {
         document.getElementById("login-options").style.display = "none";
         document.getElementById("phoneBox").style.display = "block";
-        if (!window.recaptchaVerifier) window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier("recaptcha-container");
+        if (!window.recaptchaVerifier) {
+            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier("recaptcha-container");
+        }
     };
 
     window.sendOTP = () => {
         const ph = document.getElementById("phone").value;
-        auth.signInWithPhoneNumber(ph, window.recaptchaVerifier).then(res => { window.confirmationResult = res; alert("OTP Sent!"); }).catch(e => alert(e.message));
+        auth.signInWithPhoneNumber(ph, window.recaptchaVerifier)
+            .then(res => { window.confirmationResult = res; alert("OTP Sent!"); })
+            .catch(e => alert(e.message));
     };
 
     window.verifyOTP = () => {
