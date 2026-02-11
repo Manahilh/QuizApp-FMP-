@@ -1,45 +1,39 @@
 window.addEventListener("load", () => {
     // 🔐 1. AUTHENTICATION & PAGE PROTECTION
-    // Triggers when user logs in or out
     auth.onAuthStateChanged(user => {
         const path = window.location.pathname;
-        const isOnLoginPage = path.includes("login.html");
-        const isOnQuizPage = path.includes("index.html") || path === "/";
+        
+        // Aapki login file ka naam 'index.html' hai aur quiz file 'quiz.html'
+        const isOnLoginPage = path.includes("index.html") || path.endsWith("/");
+        const isOnQuizPage = path.includes("quiz.html");
 
         if (user) {
-            // User is logged in
-            console.log("User is logged in:", user.email);
-
-            // Redirect to quiz page if currently on login page
+            // Agar user login hai aur login page par hai, toh usay quiz par bhejo
             if (isOnLoginPage) {
-                window.location.href = "index.html";
+                window.location.href = "quiz.html";
             }
 
-            // Show User Info on Quiz Page
+            // User info display logic
             const userDisp = document.getElementById("user");
             if (userDisp) {
                 userDisp.innerText = "Welcome " + (user.email || user.phoneNumber || "User");
             }
 
-            // Start Quiz if we are on the quiz page
+            // Quiz start logic
             if (document.getElementById("ques")) {
                 loadQuestion();
                 startTimer();
             }
 
         } else {
-            // User is logged out
-            console.log("User is not logged in");
-
-            // Redirect to login page if currently on quiz page
+            // Agar user login nahi hai aur quiz page par jane ki koshish kare
             if (isOnQuizPage) {
-                window.location.href = "login.html";
+                window.location.href = "index.html";
             }
         }
     });
 
     // 📚 2. QUIZ DATA
-    // Simple list of questions
     const questions = [
         { q: "How many elements are in the periodic table?", o1: "118", o2: "115", o3: "120", ans: "118" },
         { q: "Which planet is closest to the sun?", o1: "Venus", o2: "Mercury", o3: "Mars", ans: "Mercury" },
@@ -55,156 +49,108 @@ window.addEventListener("load", () => {
         { q: "What scientific theory proposed that Earth revolves around the sun?", o1: "Evolution", o2: "Heliocentrism", o3: "Big Bang", ans: "Heliocentrism" }
     ];
 
-    // 🔢 3. VARIABLES
-    let index = 0;       // Current question number (starts at 0)
-    let score = 0;       // User's score
-    let timeLeft = 240;  // 4 minutes (in seconds)
+    let index = 0;       
+    let score = 0;       
+    let timeLeft = 240;  
 
-    // 🖥️ 4. DISPLAY QUESTION FUNCTION
+    // 🖥️ 4. DISPLAY QUESTION
     function loadQuestion() {
-        const payload = questions[index]; // Get current question
-
-        // Ensure question exists
+        const payload = questions[index];
         if (!payload) return;
 
-        // Display Question Text
         document.getElementById("ques").innerText = payload.q;
-
-        // Display Options
         document.getElementById("opt1").innerText = payload.o1;
         document.getElementById("opt2").innerText = payload.o2;
         document.getElementById("opt3").innerText = payload.o3;
 
-        // Disable 'Next' button until user picks an answer
         document.getElementById("btn").disabled = true;
 
-        // Reset all radio buttons (unselect them)
         const radioButtons = document.getElementsByClassName("options");
         for (let radio of radioButtons) {
             radio.checked = false;
         }
     }
 
-    // ⏱️ 5. TIMER FUNCTION
+    // ⏱️ 5. TIMER
     function startTimer() {
-        // Run code every 1 second (1000 ms)
+        if (window.timerInterval) clearInterval(window.timerInterval);
         window.timerInterval = setInterval(() => {
-
-            // Calculate minutes and seconds
             let mins = Math.floor(timeLeft / 60);
             let secs = timeLeft % 60;
-
-            // Add leading zero if seconds < 10 (e.g., 4:09)
             if (secs < 10) secs = "0" + secs;
 
-            // Show time on screen
-            document.getElementById("timer").innerText = mins + ":" + secs;
+            const timerDisp = document.getElementById("timer");
+            if (timerDisp) timerDisp.innerText = mins + ":" + secs;
 
-            // Decrease time
             timeLeft--;
 
-            // TIME UP!
             if (timeLeft < 0) {
                 clearInterval(window.timerInterval);
                 alert("Time's Up!");
                 window.location.reload();
             }
-
         }, 1000);
     }
 
-    // ✅ 6. ENABLE NEXT BUTTON
-    // Called when user clicks any radio button option
     window.enableNext = () => {
         document.getElementById("btn").disabled = false;
     };
 
-    // ➡️ 7. NEXT QUESTION LOGIC
     window.nextQuestion = () => {
-        // Find the checked radio button
-        // 'querySelector' finds the first element matching the CSS selector
         const selectedOption = document.querySelector('input[name="quiz"]:checked');
+        if (!selectedOption) return;
 
-        if (!selectedOption) {
-            alert("Please select an option!");
-            return;
-        }
-
-        // Check if answer is correct
-        // We get the selected value (1, 2, or 3) and find the text inside the label (opt1, opt2, opt3)
         const selectedValue = selectedOption.value;
         const selectedLabelId = "opt" + selectedValue;
         const selectedText = document.getElementById(selectedLabelId).innerText;
 
-        // Compare selected text with correct answer
         if (selectedText === questions[index].ans) {
             score++;
         }
 
-        // Go to next question
         index++;
 
-        // If there are more questions, load the next one
         if (index < questions.length) {
             loadQuestion();
         } else {
-            // No more questions -> Finish Quiz
             clearInterval(window.timerInterval);
             alert("Quiz Finished! Your Score: " + score + " / " + questions.length);
-            window.location.href = "index.html"; // Reload to restart
+            window.location.href = "quiz.html"; // Finish ke baad quiz reset karne ke liye
         }
     };
 
-
-    // 🔑 8. LOGIN & LOGOUT FUNCTIONS
-
-    // Login with Google
+    // 🔑 8. LOGIN & LOGOUT
     window.loginWithGoogle = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider)
-            .catch(error => { alert(error.message); });
+        auth.signInWithPopup(provider).catch(error => alert(error.message));
     };
 
-    // Show Phone Login Options
     window.showPhoneBox = () => {
         document.getElementById("login-options").style.display = "none";
         document.getElementById("phoneBox").style.display = "block";
-
-        // Setup Recaptcha (Simpler check)
         if (!window.recaptchaVerifier) {
             window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier("recaptcha-container");
         }
     };
 
-    // Send OTP Code
     window.sendOTP = () => {
         const phoneNumber = document.getElementById("phone").value;
-
-        // Firebase Phone Auth
         auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
             .then(confirmationResult => {
                 window.confirmationResult = confirmationResult;
-                alert("OTP Sent to " + phoneNumber);
-            })
-            .catch(error => { alert("Error: " + error.message); });
+                alert("OTP Sent!");
+            }).catch(error => alert(error.message));
     };
 
-    // Verify OTP Code
     window.verifyOTP = () => {
         const otpCode = document.getElementById("otp").value;
-
         window.confirmationResult.confirm(otpCode)
-            .then(() => {
-                // Success! Auth state change listener will handle redirect
-                console.log("Phone verified!");
-            })
-            .catch(() => { alert("Invalid OTP. Please try again."); });
+            .catch(() => alert("Invalid OTP"));
     };
 
-    // Logout
     window.logout = () => {
         auth.signOut().then(() => {
-            window.location.href = "login.html";
+            window.location.href = "index.html";
         });
     };
-});
+});            
