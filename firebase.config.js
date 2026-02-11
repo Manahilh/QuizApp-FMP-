@@ -14,4 +14,6 @@ if (!firebase.apps.length) {
 }
 
 // Export the authentication instance for use in other files
+
 const auth = firebase.auth();
+const db = firebase.firestore();
