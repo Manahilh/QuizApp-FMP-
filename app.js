@@ -1,37 +1,29 @@
 window.addEventListener("load", () => {
-    // 🔐 1. AUTHENTICATION & PAGE PROTECTION
     auth.onAuthStateChanged(user => {
         const path = window.location.pathname;
-        
-        // Sahi file names: index.html (Login) aur quiz.html (Quiz)
         const isOnLoginPage = path.includes("index.html") || path.endsWith("/");
         const isOnQuizPage = path.includes("quiz.html");
 
         if (user) {
-            // User login hai toh use quiz page par bhejo
             if (isOnLoginPage) {
                 window.location.href = "quiz.html";
             }
-
-            // User ka email ya phone dikhao
-            const userDisp = document.getElementById("user");
-            if (userDisp) {
-                userDisp.innerText = "Welcome " + (user.email || user.phoneNumber || "User");
-            }
-
-            // Agar quiz page par hain toh sawal load karo
-            if (document.getElementById("ques")) {
-                loadQuestion();
-                startTimer();
-            }
-
+            if (document.getElementById("ques")) { loadQuestion(); startTimer(); }
         } else {
-            // Agar login nahi hai toh quiz page se nikal kar index par bhejo
             if (isOnQuizPage) {
                 window.location.href = "index.html";
             }
         }
     });
+
+    window.loginWithGoogle = () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+            .then(() => { console.log("Login Success!"); })
+            .catch(e => alert("Login Error: " + e.message));
+    };
+
+});
 
     // 📚 2. QUIZ DATA
     const questions = [
@@ -152,3 +144,4 @@ window.addEventListener("load", () => {
         });
     };
 });
+
