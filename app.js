@@ -1,36 +1,39 @@
 window.addEventListener("load", () => {
-    // 🔐 1. AUTH PROTECTION & REDIRECTION
+    // 🔐 1. AUTHENTICATION & PAGE PROTECTION
     auth.onAuthStateChanged(user => {
         const path = window.location.pathname;
         
+        // Sahi file names: index.html (Login) aur quiz.html (Quiz)
         const isOnLoginPage = path.includes("index.html") || path.endsWith("/");
         const isOnQuizPage = path.includes("quiz.html");
 
         if (user) {
+            // User login hai toh use quiz page par bhejo
             if (isOnLoginPage) {
                 window.location.href = "quiz.html";
             }
 
-            
+            // User ka email ya phone dikhao
             const userDisp = document.getElementById("user");
             if (userDisp) {
                 userDisp.innerText = "Welcome " + (user.email || user.phoneNumber || "User");
             }
 
-            
+            // Agar quiz page par hain toh sawal load karo
             if (document.getElementById("ques")) {
                 loadQuestion();
                 startTimer();
             }
+
         } else {
-          
+            // Agar login nahi hai toh quiz page se nikal kar index par bhejo
             if (isOnQuizPage) {
                 window.location.href = "index.html";
             }
         }
     });
 
-    // 📚 2. QUESTIONS DATA
+    // 📚 2. QUIZ DATA
     const questions = [
         { q: "How many elements are in the periodic table?", o1: "118", o2: "115", o3: "120", ans: "118" },
         { q: "Which planet is closest to the sun?", o1: "Venus", o2: "Mercury", o3: "Mars", ans: "Mercury" },
@@ -46,11 +49,11 @@ window.addEventListener("load", () => {
         { q: "What scientific theory proposed that Earth revolves around the sun?", o1: "Evolution", o2: "Heliocentrism", o3: "Big Bang", ans: "Heliocentrism" }
     ];
 
-    let index = 0; 
-    let score = 0; 
-    let timeLeft = 240; 
+    let index = 0;       
+    let score = 0;       
+    let timeLeft = 240;  
 
-    // 🖥️ 3. LOAD QUESTION
+    // 🖥️ 3. DISPLAY QUESTION
     function loadQuestion() {
         const payload = questions[index];
         if (!payload) return;
@@ -75,12 +78,11 @@ window.addEventListener("load", () => {
             let mins = Math.floor(timeLeft / 60);
             let secs = timeLeft % 60;
             if (secs < 10) secs = "0" + secs;
-
-            const timerDisp = document.getElementById("timer");
-            if (timerDisp) timerDisp.innerText = mins + ":" + secs;
+            
+            const timerElement = document.getElementById("timer");
+            if (timerElement) timerElement.innerText = mins + ":" + secs;
 
             timeLeft--;
-
             if (timeLeft < 0) {
                 clearInterval(window.timerInterval);
                 alert("Time's Up!");
@@ -93,7 +95,7 @@ window.addEventListener("load", () => {
         document.getElementById("btn").disabled = false;
     };
 
-    // ➡️ 5. NEXT QUESTION & SAVE TO DATABASE
+    // ➡️ 5. NEXT QUESTION
     window.nextQuestion = () => {
         const selectedOption = document.querySelector('input[name="quiz"]:checked');
         if (!selectedOption) return;
@@ -104,36 +106,20 @@ window.addEventListener("load", () => {
         }
 
         index++;
-
         if (index < questions.length) {
             loadQuestion();
         } else {
             clearInterval(window.timerInterval);
-            const user = auth.currentUser;
-            
-            if (user) {
-                // Realtime Database mein score push karna
-                database.ref('scores/' + user.uid).push({
-                    email: user.email || user.phoneNumber,
-                    score: score,
-                    total: questions.length,
-                    timestamp: Date.now()
-                }).then(() => {
-                    alert("Quiz Finished! Score " + score + " saved to Database.");
-                    window.location.href = "index.html";
-                }).catch(e => alert("Error saving score: " + e.message));
-            } else {
-                alert("Quiz Finished! Your Score: " + score);
-                window.location.href = "index.html";
-            }
+            alert("Quiz Finished! Your Score: " + score + " / " + questions.length);
+            window.location.href = "index.html"; 
         }
     };
 
-    // 🔑 6. LOGIN / LOGOUT FUNCTIONS
+    // 🔑 6. LOGIN & LOGOUT
     window.loginWithGoogle = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider)
-            .catch(error => alert("Google Login Error: " + error.message));
+            .catch(error => { alert("Error: " + error.message); });
     };
 
     window.showPhoneBox = () => {
@@ -145,19 +131,19 @@ window.addEventListener("load", () => {
     };
 
     window.sendOTP = () => {
-        const ph = document.getElementById("phone").value;
-        auth.signInWithPhoneNumber(ph, window.recaptchaVerifier)
-            .then(res => { 
-                window.confirmationResult = res; 
-                alert("OTP Sent!"); 
+        const phoneNumber = document.getElementById("phone").value;
+        auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
+            .then(res => {
+                window.confirmationResult = res;
+                alert("OTP Sent!");
             })
-            .catch(e => alert(e.message));
+            .catch(error => { alert("Error: " + error.message); });
     };
 
     window.verifyOTP = () => {
-        const code = document.getElementById("otp").value;
-        window.confirmationResult.confirm(code)
-            .catch(() => alert("Invalid OTP"));
+        const otpCode = document.getElementById("otp").value;
+        window.confirmationResult.confirm(otpCode)
+            .catch(() => { alert("Invalid OTP"); });
     };
 
     window.logout = () => {
